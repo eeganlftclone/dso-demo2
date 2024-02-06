@@ -5,41 +5,94 @@ metadata:
     app: spring-build-ci
 spec:
   containers:
+    - name: slscan
+      image: shiftleft/sast-scan:v2.1.2
+      imagePullPolicy: Always
+      command:
+        - cat
+      tty: true
+      resources:
+        requests:
+          memory: "50Mi"
+        limits:
+          memory: "100Mi"
+    
+    
+    
     - name: maven
-      image: maven:alpine
+      image: maven
       command:
         - cat
       tty: true
       volumeMounts:
         - name: m2
           mountPath: /root/.m2/
+      resources:
+        requests:
+          memory: "50Mi"
+        limits:
+          memory: "3000Mi"
     - name: docker-tools
       image: rmkanda/docker-tools:latest
       command:
         - cat
       tty: true
       volumeMounts:
-        - mountPath: /var/run
+        - mountPath: /var/run/
           name: docker-sock
         - mountPath: /tmp/trivycache/
           name: trivycache
+
+      resources:
+        requests:
+          memory: "50Mi"
+        limits:
+          memory: "100Mi"
+
     - name: trufflehog
       image: rmkanda/trufflehog
       command:
         - cat
       tty: true
+      resources:
+        requests:
+          memory: "50Mi"
+        limits:
+          memory: "100Mi"
     - name: licensefinder
       image: licensefinder/license_finder
       command:
         - cat
       tty: true
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:v1.6.0-debug
+      imagePullPolicy: Always
+      env:
+        - name: container
+          value: docker
+      command:
+        - sleep
+      args:
+        - 99d
+      volumeMounts:
+        - name: jenkins-docker-cfg
+          mountPath: /kaniko/.docker
+
   volumes:
     - name: m2
       hostPath:
         path: /tmp/.m2/
     - name: docker-sock
       hostPath:
-        path: /var/run
+        path: /var/run/
     - name: trivycache
       hostPath:
         path: /tmp/trivycache/
+    - name: jenkins-docker-cfg
+      projected:
+        sources:
+        - secret:
+            name: regcred
+            items:
+              - key: .dockerconfigjson
+                path: config.json
