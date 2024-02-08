@@ -20,6 +20,28 @@ pipeline {
     }
     stage('Test') {
       parallel {
+
+      stage('SAST') {
+        
+          steps {
+            
+            container('slscan') {
+              sh 'scan --type java,depscan --build'
+            }
+            
+          }
+        
+          post {
+            success {
+              archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/*', fingerprint: true, onlyIfSuccessful: true
+            }
+          }
+        
+        }
+
+
+
+        
         stage('Unit Tests') {
           steps {
             container('maven') {
