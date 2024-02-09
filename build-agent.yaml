@@ -11,14 +11,7 @@ spec:
       command:
         - cat
       tty: true
-      resources:
-        requests:
-          memory: "50Mi"
-        limits:
-          memory: "1000Mi"
-    
-    
-    
+      
     - name: maven
       image: maven
       command:
